@@ -4,6 +4,11 @@ import scripts from '../scripts';
 const {
     validation: {isPropExist}
 } = scripts;
+
+// Defaults values
+const defaults = {
+    type: 'string'
+}
 export default class MutableModel {
     constructor(setup = {
         ID: '',
@@ -20,7 +25,7 @@ export default class MutableModel {
 
         this.ID = setup.ID || utilTools.genCode(20);
         this.name = setup.name;
-        this.type = setup.type;
+        this.type = setup.type || defaults.type;
         this.value = setup.value;
         this.dependencies = setup.dependencies || [];
     }

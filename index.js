@@ -15,7 +15,10 @@ export default class MutableJS {
         bridges: Object(),
     }) {
         // Checking the required properties
-        if(!isPropExist(setup, ['name'])) throwError(`There is a required property missing!`, `Error ocurred in the construction of MutableJS "${setup.name}"`);
+        if(!isPropExist(setup, ['name'])) throwError(
+            `There is a required property missing!`, 
+            `Error ocurred in the construction of MutableJS "${setup.name}"`
+        );
       
         // Setting the the properties
         this.name = setup.name;
@@ -33,17 +36,18 @@ export default class MutableJS {
     }
 
     init() {
-        const mutablesNodes = $('[mutable]');
+        const $mutablesNodes = $('[mutable]');
         const internal = this;
         const mutables = this.mutableStore;
 
-        mutablesNodes.map(function () {
+        $mutablesNodes.map(function () {
             const $this = $(this);
             const mutableName = $this.attr('mutable');
             const mutableType = $this.attr('mutable-type') || 'string';
             let mutableListen = $this.attr('mutable-listen') || '';
             let mutableValue;
 
+            // Getting values from the DOM and setting some presets depending on what type of mutable is
             switch (mutableType) {
                 case 'string': {
                     mutableValue = $this.val() || $this.attr('value') || $this.html() || '';
@@ -59,6 +63,7 @@ export default class MutableJS {
                 }
             }
 
+            // Setting new mutable if it doesn't exist
             if (!mutables[mutableName]) {
                 mutables[mutableName] = new Mutable({
                     name: mutableName,
@@ -66,10 +71,12 @@ export default class MutableJS {
                     value: mutableValue
                 });
             } else {
+                // Or updating the value if it's already exists
                 mutables[mutableName].value = bridges[mutableName] ? bridges[mutableName](mutableValue, internal) : mutableValue;
                 // mutables[mutableName].value = mutableValue;
             }
 
+            // Adding the listeners
             mutableListen.split(',').map(function (listen) {
                 $this.on(listen, function (ev) {
                     internal.update(mutableName, ev.target.value);
@@ -79,6 +86,14 @@ export default class MutableJS {
             // Setting mutable-id to update the values later
             $this.attr('mutable-id', mutables[mutableName].ID);
         });
+
+        // Refreshing all mutables
+        this.refresh();
+    }
+
+    refresh(){
+        const internal = this;
+        const mutables = this.mutableStore;
 
         Object.keys(mutables).map(function (key) {
             const type = mutables[key].type;
@@ -103,6 +118,7 @@ export default class MutableJS {
         const $mutableNode = $(`[mutable-id='${mutable.ID}']`);
         const dependencies = $mutableNode.attr('mutable-dependencies') || '';
 
+        // Updating the mutable value
         switch (mutable.type) {
             case 'string': {
                 mutable.value = this.bridges[name] ? this.bridges[name](newValue, internal) : String(newValue || mutable.value);
@@ -120,8 +136,9 @@ export default class MutableJS {
             }
         }
 
+        // Updating the DOM
         if ($mutableNode.length) {
-            $mutableNode.map(function (index, node) {
+            $mutableNode.map(function (_, node) {
                 const $node = $(this);
 
                 switch (node.nodeName) {
@@ -147,6 +164,7 @@ export default class MutableJS {
             });
         }
 
+        // Updating dependencies
         dependencies.split(',').map(function (dependency) {
             if (dependency) internal.update(dependency, internal.mutableStore[dependency] ? internal.mutableStore[dependency].value : '');
         });
