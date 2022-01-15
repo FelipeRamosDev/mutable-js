@@ -1,3 +1,3 @@
-import tools from './tools.util';
+import * as tools from './tools';
 
-export const tools = tools;
+export const utilTools = tools;

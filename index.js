@@ -1,33 +1,35 @@
 import $ from 'jquery';
-import {genCode} from '../../utils';
-import bridges from './bridges';
+import {utilTools} from './utils';
 
+const {genCode} = utilTools;
 export default class MutableValues {
-    constructor() {
+    constructor(setup = {
+        bridges: Object(),
+    }) {
         this.mutables = {};
-        this.bridges = bridges;
+        this.bridges = setup.bridges || {};
 
         this.init();
     }
 
     init(HTMLNode) {
-        var mutablesNodes;
-        var $htmlNode;
+        let mutablesNodes;
+        let $htmlNode;
         if(HTMLNode) {
             $htmlNode = $(HTMLNode);
             mutablesNodes = $htmlNode.attr('mutable') ? $htmlNode : $htmlNode.find('[mutable]');
         } else {
             mutablesNodes = $('[mutable]');
         }
-        var internal = this;
-        var mutables = this.mutables;
+        const internal = this;
+        const mutables = this.mutables;
 
         mutablesNodes.map(function () {
-            var $this = $(this);
-            var mutableName = $this.attr('mutable');
-            var mutableType = $this.attr('mutable-type') || 'string';
-            var mutableListen = $this.attr('mutable-listen') || '';
-            var mutableValue;
+            const $this = $(this);
+            const mutableName = $this.attr('mutable');
+            const mutableType = $this.attr('mutable-type') || 'string';
+            let mutableListen = $this.attr('mutable-listen') || '';
+            let mutableValue;
 
             switch (mutableType) {
                 case 'string': {
@@ -75,7 +77,7 @@ export default class MutableValues {
             return $htmlNode;
         } else {
             Object.keys(mutables).map(function (key) {
-                var type = mutables[key].type;
+                const type = mutables[key].type;
 
                 if(type !== 'button' && type !== 'html'){
                     internal.update(key, mutables[key].value);
@@ -90,10 +92,10 @@ export default class MutableValues {
 
     update(name, newValue) {
         if (!this.mutables[name]) throw new Error(`The mutable value ${name} isn't exist!`);
-        var internal = this;
-        var mutable = this.mutables[name];
-        var $mutableNode = $(`[mutable-id='${mutable.ID}']`);
-        var dependencies = $mutableNode.attr('mutable-dependencies') || '';
+        const internal = this;
+        const mutable = this.mutables[name];
+        const $mutableNode = $(`[mutable-id='${mutable.ID}']`);
+        const dependencies = $mutableNode.attr('mutable-dependencies') || '';
 
         switch (mutable.type) {
             case 'string': {
@@ -101,8 +103,8 @@ export default class MutableValues {
                 break;
             }
             case 'number': {
-                var inputNumber = Number(newValue || mutable.value)
-                var bridge = this.bridges[name];
+                const inputNumber = Number(newValue || mutable.value)
+                const bridge = this.bridges[name];
                 mutable.value = bridge ? Number(bridge(inputNumber, internal)) : inputNumber;
                 break;
             }
@@ -111,7 +113,7 @@ export default class MutableValues {
                 break;
             }
             case 'html': {
-                var initializedHTML = internal.init(newValue || mutable.value);
+                const initializedHTML = internal.init(newValue || mutable.value);
                 mutable.value = this.bridges[name] ? this.bridges[name](newValue, this) : initializedHTML;
                 // mutable.value = initializedHTML;
                 break;
@@ -120,7 +122,7 @@ export default class MutableValues {
 
         if ($mutableNode.length) {
             $mutableNode.map(function (index, node) {
-                var $node = $(this);
+                const $node = $(this);
 
                 switch (node.nodeName) {
                     case 'INPUT':
