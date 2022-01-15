@@ -13,7 +13,7 @@ export default class MutableModel {
         dependencies: []
     }){
         // Checking required properties
-        if(isPropExist(setup, ['name'])) logs.throwError(
+        if(!isPropExist(setup, ['name'])) logs.throwError(
             `There is a required property missing!`, 
             `Error ocurred in the construction of MutableModel model "${this.name}"`
         );
