@@ -1,5 +1,6 @@
 import $ from 'jquery';
 import {Mutable} from './models';
+import './scripts';
 
 export default class MutableValues {
     constructor(setup = {
