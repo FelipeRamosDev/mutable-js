@@ -1,4 +1,4 @@
-import {tools} from '../utils';
+import {utilTools} from '../utils';
 
 export default class Mutable {
     constructor(setup = {
@@ -8,7 +8,7 @@ export default class Mutable {
         value: '',
         dependencies: []
     }){
-        this.ID = setup.ID || tools.genCode(20);
+        this.ID = setup.ID || utilTools.genCode(20);
         this.name = setup.name;
         this.type = setup.type;
         this.value = setup.value;

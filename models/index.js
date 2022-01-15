@@ -1,3 +1,5 @@
-import Mutable from './Mutable.model';
+import Mutable from './Mutable';
 
-export const Mutable = Mutable;
+export {
+    Mutable
+};

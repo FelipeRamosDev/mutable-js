@@ -1,13 +1,18 @@
 import $ from 'jquery';
-import {utilTools} from './utils';
+import {Mutable} from './models';
 
-const {genCode} = utilTools;
 export default class MutableValues {
     constructor(setup = {
+        store: [Mutable.prototype],
         bridges: Object(),
     }) {
-        this.mutables = {};
         this.bridges = setup.bridges || {};
+        this.store = {};
+
+        if(setup && setup.store && Array.isArray(setup.store)) setup.store.map(set=>{
+            if(!set.name) throw new Error(`MutableJS: The mutable 'name' property is required!`);
+            this.store[set.name] = new Mutable(set);
+        });
 
         this.init();
     }
@@ -22,7 +27,7 @@ export default class MutableValues {
             mutablesNodes = $('[mutable]');
         }
         const internal = this;
-        const mutables = this.mutables;
+        const mutables = this.store;
 
         mutablesNodes.map(function () {
             const $this = $(this);
@@ -51,12 +56,11 @@ export default class MutableValues {
             }
 
             if (!mutables[mutableName]) {
-                mutables[mutableName] = {
-                    ID: genCode(20),
+                mutables[mutableName] = new Mutable({
                     name: mutableName,
                     type: mutableType,
                     value: mutableValue
-                };
+                });
             } else {
                 mutables[mutableName].value = bridges[mutableName] ? bridges[mutableName](mutableValue, internal) : mutableValue;
                 // mutables[mutableName].value = mutableValue;
@@ -87,13 +91,13 @@ export default class MutableValues {
     }
 
     get(name) {
-        return this.mutables[name].value;
+        return this.store[name].value;
     }
 
     update(name, newValue) {
-        if (!this.mutables[name]) throw new Error(`The mutable value ${name} isn't exist!`);
+        if (!this.store[name]) throw new Error(`The mutable value ${name} isn't exist!`);
         const internal = this;
-        const mutable = this.mutables[name];
+        const mutable = this.store[name];
         const $mutableNode = $(`[mutable-id='${mutable.ID}']`);
         const dependencies = $mutableNode.attr('mutable-dependencies') || '';
 
@@ -152,7 +156,7 @@ export default class MutableValues {
         }
 
         dependencies.split(',').map(function (dependency) {
-            if (dependency) internal.update(dependency, internal.mutables[dependency] ? internal.mutables[dependency].value : '');
+            if (dependency) internal.update(dependency, internal.store[dependency] ? internal.store[dependency].value : '');
         });
     }
 }
