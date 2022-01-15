@@ -53,6 +53,8 @@ function checkType(value){
 }
 
 function isPropExist(obj = {}, props = ['']){
+    let result = true;
+
     if(checkType(obj) !== 'object') throwError(
         `Type of provided parameter "obj" isn't an object!`, 
         'Error occured on isPropExist().'
@@ -65,11 +67,11 @@ function isPropExist(obj = {}, props = ['']){
     props.map(prop=>{
         if(!obj[prop]){
             error(`Property "${prop}" provided doesn't exist in the object!`, 'Error occured on isPropExist().');
-            return false
+            result = false;
         }
     });
 
-    return true;
+    return result;
 }
 
 export default {

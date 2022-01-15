@@ -1,6 +1,10 @@
-import {utilTools} from '../utils';
+import {utilTools, logs} from '../utils';
+import scripts from '../scripts';
 
-export default class Mutable {
+const {
+    validation: {isPropExist}
+} = scripts;
+export default class MutableModel {
     constructor(setup = {
         ID: '',
         name: '',
@@ -8,6 +12,12 @@ export default class Mutable {
         value: '',
         dependencies: []
     }){
+        // Checking required properties
+        if(isPropExist(setup, ['name'])) logs.throwError(
+            `There is a required property missing!`, 
+            `Error ocurred in the construction of MutableModel model "${this.name}"`
+        );
+
         this.ID = setup.ID || utilTools.genCode(20);
         this.name = setup.name;
         this.type = setup.type;
