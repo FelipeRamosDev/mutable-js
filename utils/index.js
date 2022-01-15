@@ -1,5 +1,5 @@
-import * as tools from './tools';
-import * as utilLog from './log';
+import tools from './tools';
+import utilLog from './logs';
 
 export const utilTools = tools;
-export const log = utilLog;
+export const logs = utilLog;
