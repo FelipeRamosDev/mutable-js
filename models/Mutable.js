@@ -12,6 +12,6 @@ export default class Mutable {
         this.name = setup.name;
         this.type = setup.type;
         this.value = setup.value;
-        this.dependencies = setup.dependencies;
+        this.dependencies = setup.dependencies || [];
     }
 }

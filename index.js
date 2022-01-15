@@ -3,31 +3,27 @@ import {Mutable} from './models';
 
 export default class MutableValues {
     constructor(setup = {
-        store: [Mutable.prototype],
+        name: String(),
+        mutableStore: [Mutable.prototype],
         bridges: Object(),
     }) {
+        this.name = setup.name;
         this.bridges = setup.bridges || {};
-        this.store = {};
+        this.mutableStore = {};
 
-        if(setup && setup.store && Array.isArray(setup.store)) setup.store.map(set=>{
+        if(setup && setup.mutableStore && Array.isArray(setup.mutableStore)) setup.mutableStore.map(set=>{
             if(!set.name) throw new Error(`MutableJS: The mutable 'name' property is required!`);
-            this.store[set.name] = new Mutable(set);
+            this.mutableStore[set.name] = new Mutable(set);
         });
 
         this.init();
+        window[this.name] = this;
     }
 
-    init(HTMLNode) {
-        let mutablesNodes;
-        let $htmlNode;
-        if(HTMLNode) {
-            $htmlNode = $(HTMLNode);
-            mutablesNodes = $htmlNode.attr('mutable') ? $htmlNode : $htmlNode.find('[mutable]');
-        } else {
-            mutablesNodes = $('[mutable]');
-        }
+    init() {
+        const mutablesNodes = $('[mutable]');
         const internal = this;
-        const mutables = this.store;
+        const mutables = this.mutableStore;
 
         mutablesNodes.map(function () {
             const $this = $(this);
@@ -47,10 +43,6 @@ export default class MutableValues {
                 }
                 case 'button': {
                     mutableListen = 'click';
-                    break;
-                }
-                case 'html': {
-                    mutableValue = $this.html();
                     break;
                 }
             }
@@ -76,28 +68,23 @@ export default class MutableValues {
             $this.attr('mutable-id', mutables[mutableName].ID);
         });
 
-        
-        if(HTMLNode) {
-            return $htmlNode;
-        } else {
-            Object.keys(mutables).map(function (key) {
-                const type = mutables[key].type;
+        Object.keys(mutables).map(function (key) {
+            const type = mutables[key].type;
 
-                if(type !== 'button' && type !== 'html'){
-                    internal.update(key, mutables[key].value);
-                }
-            });
-        }
+            if(type !== 'button'){
+                internal.update(key, mutables[key].value);
+            }
+        });
     }
 
     get(name) {
-        return this.store[name].value;
+        return this.mutableStore[name].value;
     }
 
     update(name, newValue) {
-        if (!this.store[name]) throw new Error(`The mutable value ${name} isn't exist!`);
+        if (!this.mutableStore[name]) throw new Error(`The mutable value ${name} isn't exist!`);
         const internal = this;
-        const mutable = this.store[name];
+        const mutable = this.mutableStore[name];
         const $mutableNode = $(`[mutable-id='${mutable.ID}']`);
         const dependencies = $mutableNode.attr('mutable-dependencies') || '';
 
@@ -114,12 +101,6 @@ export default class MutableValues {
             }
             case 'button': {
                 this.bridges[name] && this.bridges[name](newValue || mutable.value, internal);
-                break;
-            }
-            case 'html': {
-                const initializedHTML = internal.init(newValue || mutable.value);
-                mutable.value = this.bridges[name] ? this.bridges[name](newValue, this) : initializedHTML;
-                // mutable.value = initializedHTML;
                 break;
             }
         }
@@ -142,10 +123,6 @@ export default class MutableValues {
                             case 'button': {
                                 break;
                             }
-                            case 'html': {
-                                $node.html(mutable.value);
-                                break;
-                            }
                             default: {
                                 $node.html(mutable.value);
                             }
@@ -156,7 +133,7 @@ export default class MutableValues {
         }
 
         dependencies.split(',').map(function (dependency) {
-            if (dependency) internal.update(dependency, internal.store[dependency] ? internal.store[dependency].value : '');
+            if (dependency) internal.update(dependency, internal.mutableStore[dependency] ? internal.mutableStore[dependency].value : '');
         });
     }
 }
