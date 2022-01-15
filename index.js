@@ -94,7 +94,10 @@ export default class MutableJS {
     }
 
     update(name, newValue) {
-        if (!this.mutableStore[name]) throw new Error(`The mutable value ${name} isn't exist!`);
+        if (!this.mutableStore[name]) throwError(
+            `The mutable value "${name}" isn't exist!`, 
+            `You're trying to set the value "${newValue}" for the mutable name "${name}"!`
+        );
         const internal = this;
         const mutable = this.mutableStore[name];
         const $mutableNode = $(`[mutable-id='${mutable.ID}']`);
