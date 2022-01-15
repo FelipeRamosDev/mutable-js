@@ -1,22 +1,33 @@
 import $ from 'jquery';
 import {Mutable} from './models';
-import './scripts';
+import {logs} from './utils';
+import scripts from './scripts';
 
-export default class MutableValues {
+const {throwError} = logs;
+const {
+    validation: {isPropExist}
+} = scripts;
+
+export default class MutableJS {
     constructor(setup = {
         name: String(),
         mutableStore: [Mutable.prototype],
         bridges: Object(),
     }) {
+        // Checking the required properties
+        if(!isPropExist(setup, ['name'])) throwError(`There is a required property missing!`, `Error ocurred in the construction of MutableJS "${setup.name}"`);
+      
+        // Setting the the properties
         this.name = setup.name;
         this.bridges = setup.bridges || {};
         this.mutableStore = {};
 
+        // Setting mutables provided as argument in the construction
         if(setup && setup.mutableStore && Array.isArray(setup.mutableStore)) setup.mutableStore.map(set=>{
-            if(!set.name) throw new Error(`MutableJS: The mutable 'name' property is required!`);
             this.mutableStore[set.name] = new Mutable(set);
         });
 
+        // Initializing mutables
         this.init();
         window[this.name] = this;
     }
