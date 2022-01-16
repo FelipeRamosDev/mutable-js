@@ -74,6 +74,9 @@ export default class MutableJS {
             // Adding the listeners
             init.addListeners($this, internal, mutables[mutableName]);
 
+            // Initializing dependencies
+            init.initDependencies($this, mutables[mutableName]);
+
             // Setting mutable-id to update the values later
             $this.attr('mutable-id', mutables[mutableName].ID);
         });
@@ -130,20 +133,15 @@ export default class MutableJS {
 
         const internal = this;
         const mutable = this.mutableStore[name];
-        // ---------------------
-        // Create a different approach here. Store the dependencies into the mutable right on the initialization
-        const $mutableNode = $(`[mutable-id='${mutable.ID}']`);
-        const dependencies = $mutableNode.attr('mutable-dependencies') || '';
-        // ---------------------
 
-        // Updating the mutable value
+        // Updating the mutable object value
         update.updateMutableValue(mutable, newValue, this);
 
         // Updating the DOM
         update.updateDOM(mutable);
 
         // Updating dependencies
-        dependencies.split(',').map(function (dependency) {
+        mutable.dependencies.map(function (dependency) {
             if (dependency) internal.update(dependency, internal.mutableStore[dependency] ? internal.mutableStore[dependency].value : '');
         });
     }
