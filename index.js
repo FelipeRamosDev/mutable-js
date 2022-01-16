@@ -42,39 +42,36 @@ export default class MutableJS {
         const mutables = this.mutableStore;
 
         $mutablesNodes.map(function () {
+            const node = this;
             const $this = $(this);
             const mutableName = $this.attr('mutable');
             const mutableType = $this.attr('mutable-type') || 'string';
             let mutableListen = $this.attr('mutable-listen') || '';
             let mutableValue;
+            let mutable;
 
             // Getting values from the DOM and setting some presets depending on what type of mutable is
             mutableValue = init.getDataFromDOM($this, mutableName, mutableType);
 
             // Setting default listeners
-            if(mutableType === 'button'){
-                mutableListen = 'click';
-            }
+            mutableListen = init.treatListeners(node, mutableType, mutableListen);
 
             // Setting new mutable if it doesn't exist
             if (!mutables[mutableName]) {
                 mutables[mutableName] = new Mutable({
                     name: mutableName,
                     type: mutableType,
-                    value: mutableValue
+                    value: mutableValue,
+                    listen: mutableListen
                 });
             } else {
                 // Or updating the value if it's already exists
-                const bridge = this.bridges[mutableName];
+                const bridge = internal.bridges[mutableName];
                 mutables[mutableName].value = bridge ? bridge(mutableValue, internal) : mutableValue;
             }
 
             // Adding the listeners
-            mutableListen.split(',').map(function (listen) {
-                $this.on(listen, function (ev) {
-                    internal.update(mutableName, ev.target.value);
-                });
-            });
+            init.addListeners($this, internal, mutables[mutableName]);
 
             // Setting mutable-id to update the values later
             $this.attr('mutable-id', mutables[mutableName].ID);

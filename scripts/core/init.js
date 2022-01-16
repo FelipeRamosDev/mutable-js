@@ -1,5 +1,6 @@
 import scripts from '../../scripts';
 import utils from '../../utils';
+import {MutableListen} from '../../models';
 
 const getFromDomMethods = {
     string: ($this)=>{
@@ -59,6 +60,59 @@ function getDataFromDOM($this, mutableName, mutableType){
     return mutableValue;
 }
 
+function treatListeners(node, mutableType, mutableListen){
+    const {isEmpty} = scripts.validation
+    const splited = !isEmpty(mutableListen) ? mutableListen.split(',') : [];
+
+    switch(mutableType){
+        case 'string':
+        case 'number': {
+            switch(node.nodeName){
+                case 'INPUT':
+                case 'TEXTAREA': {
+                    return blendListeners(splited, ['keydown', 'change']);
+                }
+                case 'SELECT': {
+                    return blendListeners(splited, ['change']);
+                } 
+                default: {
+                    return splited;
+                }
+            }
+        }
+        case 'button': {
+            return blendListeners(splited, ['click']);
+        }
+        default: {
+            return splited;
+        }
+    }
+}
+
+function blendListeners(splitedEvents, eventsToBlend){
+    const parsed = {};
+
+    splitedEvents.map(item=>{
+        parsed[item] = new MutableListen({evName: item});
+    });
+
+    eventsToBlend.map(item=>{
+        parsed[item] = new MutableListen({evName: item});
+    });
+
+    return parsed;
+}
+
+function addListeners($this, internal, mutable){
+    Object.keys(mutable.listen).map((current)=>{
+        $this.on(current, (ev)=>{
+            internal.update(mutable.name, ev.target.value);
+        });
+    });
+}
+
 export default {
     getDataFromDOM,
+    treatListeners,
+    addListeners
 }
