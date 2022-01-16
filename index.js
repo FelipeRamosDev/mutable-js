@@ -58,7 +58,7 @@ export default class MutableJS {
             let mutableValue;
 
             // Getting values from the DOM and setting some presets depending on what type of mutable is
-            mutableValue = init.getDataFromDOM($this, mutableName, mutableType);
+            mutableValue = init.getDataFromDOM(internal, $this, mutableName, mutableType);
 
             // Setting default listeners
             mutableListen = init.treatListeners(node, mutableType, mutableListen);
@@ -114,6 +114,14 @@ export default class MutableJS {
 
         if(bridge) this.setBridge(newMutable.name, bridge);
         return newMutable;
+    }
+
+    runBridge(mutableName, input){
+        if(!this.bridge[mutableName]) throwError(
+            `The mutable bridge "${mutableName}" isn't exist!`
+        );
+
+        return this.bridge[mutableName](input, this);
     }
 
     setBridge(mutableName = '', bridge = (input, internal = MutableJS.prototype )=>{}){

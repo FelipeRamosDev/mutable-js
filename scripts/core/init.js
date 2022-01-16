@@ -4,36 +4,41 @@ import {MutableListen} from '../../models';
 
 const getFromDomMethods = {
     string: ($this)=>{
-        return $this.attr('mutable-value') || $this.val() || $this.attr('value') || $this.text() || '';
+        const newValue = $this.attr('mutable-value') || $this.val() || $this.attr('value') || $this.text() || '';
+        return newValue;
     },
-    number: ($this)=>{
+    number: ($this, mutableName)=>{
         const {checkType} = scripts.validation;
+        const {throwError} = utils.logs;
         let parsed = $this.attr('mutable-value') || $this.val() || $this.attr('value') || $this.text();
-    
-        if(checkType(parsed) === 'string'){
-            let number = Number(parsed.replaceAll(' ', ''));
-    
-            if(checkType(number) !== 'number') throwError(
-                `The value provided isn't resulting in a number!`,
-                `Please check the value mutable "${mutableName}.`
-            );
-    
-            return number;
-        }
+        let number = Number(parsed.replaceAll(' ', ''));
+
+        if(checkType(number) !== 'number') throwError(
+            `The value provided isn't resulting in a number!`,
+            `Please check the value mutable "${mutableName}".`
+        );
+
+        return number;
     }
 }
 
-function getDataFromDOM($this, mutableName, mutableType){
+function getDataFromDOM(internal, $this, mutableName, mutableType){
     const {throwError, error} = utils.logs;
+    const bridge = internal.bridges[mutableName];
     let mutableValue;
 
     switch (mutableType) {
         case 'string': {
-            mutableValue = getFromDomMethods.string($this);
+            const value = getFromDomMethods.string($this, mutableName);
+            mutableValue = bridge ? bridge(value, internal) : value;
             break;
         }
         case 'number': {
-            mutableValue = getFromDomMethods.number($this);
+            const value = getFromDomMethods.number($this, mutableName);
+            mutableValue = bridge ? bridge(value, internal) : value;
+            break;
+        }
+        case 'object': {
             break;
         }
         case 'array': {
@@ -51,7 +56,15 @@ function getDataFromDOM($this, mutableName, mutableType){
         default: {
             error($this, 'An error occured on the node above!');
             throwError(
-                `The mutable type is incorrect! It's provided "${mutableType}". \nThe only mutable types allowed is:\n'string'\n'number'\n'object'\n'array'\n'button'\n'html'\n'component'\n`,
+                `The mutable type is incorrect! It's provided "${mutableType}". \n
+                The only mutable types allowed is:\n
+                'string'\n
+                'number'\n
+                'object'\n
+                'array'\n
+                'button'\n
+                'html'\n
+                'component'`,
                 `Please check the value mutable "${mutableName}.`
             );
         }
@@ -119,6 +132,10 @@ function initDependencies($this, mutable){
 
         mutable.dependencies = parsed;
     }
+}
+
+function initBridge(internal){
+
 }
 
 export default {
