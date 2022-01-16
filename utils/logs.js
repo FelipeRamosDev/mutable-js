@@ -11,7 +11,7 @@ function warn(input, ref){
 }
 
 function throwError(msg = '', ref = ''){
-    throw new Error('\nMutableJS: ' + msg + '\n' + (ref ? 'Reference: ' + ref + '\n' : ''));
+    throw new Error('\nMutableJS: ' + msg + '\n' + (ref ? 'Tip: ' + ref + '\n' : ''));
 }
 
 export default {
