@@ -5,7 +5,7 @@ import scripts from './scripts';
 
 const {throwError} = utils.logs;
 const {
-    core: {init},
+    core: {init, update},
     validation: {isPropExist}
 } = scripts;
 
@@ -130,54 +130,17 @@ export default class MutableJS {
 
         const internal = this;
         const mutable = this.mutableStore[name];
+        // ---------------------
+        // Create a different approach here. Store the dependencies into the mutable right on the initialization
         const $mutableNode = $(`[mutable-id='${mutable.ID}']`);
         const dependencies = $mutableNode.attr('mutable-dependencies') || '';
+        // ---------------------
 
         // Updating the mutable value
-        switch (mutable.type) {
-            case 'string': {
-                mutable.value = this.bridges[name] ? this.bridges[name](newValue, internal) : String(newValue || mutable.value);
-                break;
-            }
-            case 'number': {
-                const inputNumber = Number(newValue || mutable.value)
-                const bridge = this.bridges[name];
-                mutable.value = bridge ? Number(bridge(inputNumber, internal)) : inputNumber;
-                break;
-            }
-            case 'button': {
-                this.bridges[name] && this.bridges[name](newValue || mutable.value, internal);
-                break;
-            }
-        }
+        update.updateMutableValue(mutable, newValue, this);
 
         // Updating the DOM
-        if ($mutableNode.length) {
-            $mutableNode.map(function (_, node) {
-                const $node = $(this);
-
-                switch (node.nodeName) {
-                    case 'INPUT':
-                    case 'SELECT': {
-                        $node.val(mutable.value);
-                        break;
-                    }
-                    case 'BUTTON': {
-                        break;
-                    }
-                    default: {
-                        switch(mutable.type){
-                            case 'button': {
-                                break;
-                            }
-                            default: {
-                                $node.html(mutable.value);
-                            }
-                        }
-                    }
-                }
-            });
-        }
+        update.updateDOM(mutable);
 
         // Updating dependencies
         dependencies.split(',').map(function (dependency) {
