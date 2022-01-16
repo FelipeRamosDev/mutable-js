@@ -70,7 +70,7 @@ function treatListeners(node, mutableType, mutableListen){
             switch(node.nodeName){
                 case 'INPUT':
                 case 'TEXTAREA': {
-                    return blendListeners(splited, ['keydown', 'change']);
+                    return blendListeners(splited, ['keydown', 'keyup', 'change']);
                 }
                 case 'SELECT': {
                     return blendListeners(splited, ['change']);

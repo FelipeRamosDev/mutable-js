@@ -5,7 +5,7 @@ import scripts from './scripts';
 
 const {throwError} = utils.logs;
 const {
-    core: {init},
+    core: {init, update},
     validation: {isPropExist}
 } = scripts;
 
@@ -134,22 +134,7 @@ export default class MutableJS {
         const dependencies = $mutableNode.attr('mutable-dependencies') || '';
 
         // Updating the mutable value
-        switch (mutable.type) {
-            case 'string': {
-                mutable.value = this.bridges[name] ? this.bridges[name](newValue, internal) : String(newValue || mutable.value);
-                break;
-            }
-            case 'number': {
-                const inputNumber = Number(newValue || mutable.value)
-                const bridge = this.bridges[name];
-                mutable.value = bridge ? Number(bridge(inputNumber, internal)) : inputNumber;
-                break;
-            }
-            case 'button': {
-                this.bridges[name] && this.bridges[name](newValue || mutable.value, internal);
-                break;
-            }
-        }
+        update.updateMutableValue(mutable, newValue, this);
 
         // Updating the DOM
         if ($mutableNode.length) {
