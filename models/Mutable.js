@@ -1,9 +1,10 @@
-import {utilTools, logs} from '../utils';
+import utils from '../utils';
 import scripts from '../scripts';
 
 const {
     validation: {isPropExist}
 } = scripts;
+const {tools, logs} = utils;
 
 // Defaults values
 const defaults = {
@@ -23,7 +24,7 @@ export default class MutableModel {
             `Error ocurred in the construction of MutableModel model "${this.name}"`
         );
 
-        this.ID = setup.ID || utilTools.genCode(20);
+        this.ID = setup.ID || tools.genCode(20);
         this.name = setup.name;
         this.type = setup.type || defaults.type;
         this.value = setup.value;

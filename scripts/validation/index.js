@@ -1,6 +1,6 @@
-import {logs} from '../../utils';
+import utils from '../../utils';
 
-const {error, throwError} = logs;
+const {error, throwError} = utils.logs;
 
 function isEmpty(value){
     const type = typeof value;
