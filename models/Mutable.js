@@ -10,7 +10,7 @@ const {tools, logs} = utils;
 const defaults = {
     type: 'string'
 }
-export default class MutableModel {
+export default class Mutable {
     constructor(setup = {
         ID: '',
         name: '',
@@ -22,7 +22,7 @@ export default class MutableModel {
         // Checking required properties
         if(!isPropExist(setup, ['name'])) logs.throwError(
             `There is a required property missing!`, 
-            `Error ocurred in the construction of MutableModel model "${this.name}"`
+            `Error ocurred in the construction of Mutable model "${this.name}"`
         );
 
         this.ID = setup.ID || tools.genCode(20);

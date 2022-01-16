@@ -5,11 +5,11 @@ A bridge works between the data input and the data output, so it can be used to 
 
 # Documentation
 
-## Special HTML tags
+## Special HTML attributes
 - `[mutable]` -> 
 - `[mutable-type]` -> 
 - `[mutable-value]` -> 
 - `[mutable-listen]` -> 
 - `[mutable-remove-listen]` -> 
-- `[mutable-add-listen]` -> 
 - `[mutable-dependencies]` -> 
+- `[mutable-disable]` ->

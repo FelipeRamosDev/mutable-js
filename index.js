@@ -14,7 +14,7 @@ export default class MutableJS {
         name: String(),
         mutableStore: [Mutable.prototype],
         bridges: Object(),
-    }) {
+    }){
         // Checking the required properties
         if(!isPropExist(setup, ['name'])) throwError(
             `There is a required property missing!`, 
@@ -36,7 +36,7 @@ export default class MutableJS {
         window[this.name] = this;
     }
 
-    init() {
+    init(){
         const $mutablesNodes = $('[mutable]');
         const internal = this;
         const mutables = this.mutableStore;
@@ -56,18 +56,12 @@ export default class MutableJS {
             mutableListen = init.treatListeners(node, mutableType, mutableListen);
 
             // Setting new mutable if it doesn't exist
-            if (!mutables[mutableName]) {
-                mutables[mutableName] = new Mutable({
-                    name: mutableName,
-                    type: mutableType,
-                    value: mutableValue,
-                    listen: mutableListen
-                });
-            } else {
-                // Or updating the value if it's already exists
-                const bridge = internal.bridges[mutableName];
-                mutables[mutableName].value = bridge ? bridge(mutableValue, internal) : mutableValue;
-            }
+            !mutables[mutableName] && internal.set({
+                name: mutableName,
+                type: mutableType,
+                value: mutableValue,
+                listen: mutableListen
+            });
 
             // Adding the listeners
             init.addListeners($this, internal, mutables[mutableName]);
@@ -84,7 +78,7 @@ export default class MutableJS {
         const internal = this;
         const mutables = this.mutableStore;
 
-        Object.keys(mutables).map(function (key) {
+        Object.keys(mutables).map((key)=>{
             const type = mutables[key].type;
 
             if(type !== 'button'){
@@ -93,12 +87,20 @@ export default class MutableJS {
         });
     }
 
-    get(name) {
+    get(name){
         return this.mutableStore[name].value;
     }
 
-    set(){
+    set(setup = Mutable.prototype){
+        const newMutable = new Mutable(setup);
 
+        if(this.mutableStore[newMutable.name]) throwError(
+            `The mutable name "${newMutable.name}" already exists! Please use another one!`,
+            `This error occured on the set method of "${this.name}" MutableJS!`
+        );
+
+        this.mutableStore[newMutable.name] = newMutable;
+        return newMutable;
     }
 
     update(name, newValue) {
