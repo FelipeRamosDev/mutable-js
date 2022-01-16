@@ -1,5 +1,5 @@
-import methods from './methods';
+import init from './init';
 
 export default {
-    methods
+    init
 };

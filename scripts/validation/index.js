@@ -1,32 +1,32 @@
-import {logs} from '../../utils';
+import utils from '../../utils';
 
-const {error, throwError} = logs;
+const {error, throwError} = utils.logs;
 
 function isEmpty(value){
     const type = typeof value;
 
     switch(type){
         case 'string': {
-            if(value.length) return true;
+            if(value.length) return false;
             break;
         }
         case 'number': {
-            if(value >= 0 || value <= 0) return true;
+            if(value >= 0 || value <= 0) return false;
             break;
         }
         case 'object': {
             if(value !== null){
-                if(Array.isArray(value) && value.length) return true;
-                if(Object.keys(value).length) return true;
+                if(Array.isArray(value) && value.length) return false;
+                if(Object.keys(value).length) return false;
             }
             break;
         }
         default: {
-            if(value) return true;
+            if(value) return false;
         }
     }
 
-    return false;
+    return true;
 }
 
 function checkType(value){

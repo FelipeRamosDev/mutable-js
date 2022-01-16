@@ -1,10 +1,11 @@
 import $ from 'jquery';
 import {Mutable} from './models';
-import {logs} from './utils';
+import utils from './utils';
 import scripts from './scripts';
 
-const {throwError} = logs;
+const {throwError} = utils.logs;
 const {
+    core: {init},
     validation: {isPropExist}
 } = scripts;
 
@@ -20,7 +21,7 @@ export default class MutableJS {
             `Error ocurred in the construction of MutableJS "${setup.name}"`
         );
       
-        // Setting the the properties
+        // Setting the properties
         this.name = setup.name;
         this.bridges = setup.bridges || {};
         this.mutableStore = {};
@@ -41,6 +42,7 @@ export default class MutableJS {
         const mutables = this.mutableStore;
 
         $mutablesNodes.map(function () {
+            const node = this;
             const $this = $(this);
             const mutableName = $this.attr('mutable');
             const mutableType = $this.attr('mutable-type') || 'string';
@@ -48,40 +50,27 @@ export default class MutableJS {
             let mutableValue;
 
             // Getting values from the DOM and setting some presets depending on what type of mutable is
-            switch (mutableType) {
-                case 'string': {
-                    mutableValue = $this.val() || $this.attr('value') || $this.html() || '';
-                    break;
-                }
-                case 'number': {
-                    mutableValue = Number($this.val() || $this.attr('value') || $this.html());
-                    break;
-                }
-                case 'button': {
-                    mutableListen = 'click';
-                    break;
-                }
-            }
+            mutableValue = init.getDataFromDOM($this, mutableName, mutableType);
+
+            // Setting default listeners
+            mutableListen = init.treatListeners(node, mutableType, mutableListen);
 
             // Setting new mutable if it doesn't exist
             if (!mutables[mutableName]) {
                 mutables[mutableName] = new Mutable({
                     name: mutableName,
                     type: mutableType,
-                    value: mutableValue
+                    value: mutableValue,
+                    listen: mutableListen
                 });
             } else {
                 // Or updating the value if it's already exists
-                mutables[mutableName].value = bridges[mutableName] ? bridges[mutableName](mutableValue, internal) : mutableValue;
-                // mutables[mutableName].value = mutableValue;
+                const bridge = internal.bridges[mutableName];
+                mutables[mutableName].value = bridge ? bridge(mutableValue, internal) : mutableValue;
             }
 
             // Adding the listeners
-            mutableListen.split(',').map(function (listen) {
-                $this.on(listen, function (ev) {
-                    internal.update(mutableName, ev.target.value);
-                });
-            });
+            init.addListeners($this, internal, mutables[mutableName]);
 
             // Setting mutable-id to update the values later
             $this.attr('mutable-id', mutables[mutableName].ID);
@@ -108,11 +97,16 @@ export default class MutableJS {
         return this.mutableStore[name].value;
     }
 
+    set(){
+
+    }
+
     update(name, newValue) {
         if (!this.mutableStore[name]) throwError(
             `The mutable value "${name}" isn't exist!`, 
             `You're trying to set the value "${newValue}" for the mutable name "${name}"!`
         );
+
         const internal = this;
         const mutable = this.mutableStore[name];
         const $mutableNode = $(`[mutable-id='${mutable.ID}']`);

@@ -1,5 +1,6 @@
-import Mutable from './Mutable';
+import Mutable, {MutableListen} from './Mutable';
 
 export {
-    Mutable
+    Mutable,
+    MutableListen
 };
