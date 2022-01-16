@@ -1,6 +1,26 @@
 import scripts from '../../scripts';
 import utils from '../../utils';
 
+const getFromDomMethods = {
+    string: ($this)=>{
+        return $this.attr('mutable-value') || $this.val() || $this.attr('value') || $this.text() || '';
+    },
+    number: ($this)=>{
+        const {checkType} = scripts.validation;
+        let parsed = $this.attr('mutable-value') || $this.val() || $this.attr('value') || $this.text();
+    
+        if(checkType(parsed) === 'string'){
+            let number = Number(parsed.replaceAll(' ', ''));
+    
+            if(checkType(number) !== 'number') throwError(
+                `The value provided isn't resulting in a number!`,
+                `Please check the value mutable "${mutableName}.`
+            );
+    
+            return number;
+        }
+    }
+}
 
 function getDataFromDOM($this, mutableName, mutableType){
     const {throwError, error} = utils.logs;
@@ -8,11 +28,11 @@ function getDataFromDOM($this, mutableName, mutableType){
 
     switch (mutableType) {
         case 'string': {
-            mutableValue = grabString($this);
+            mutableValue = getFromDomMethods.string($this);
             break;
         }
         case 'number': {
-            mutableValue = grabNumber($this);
+            mutableValue = getFromDomMethods.number($this);
             break;
         }
         case 'array': {
@@ -39,26 +59,6 @@ function getDataFromDOM($this, mutableName, mutableType){
     return mutableValue;
 }
 
-function grabString($this){
-    return $this.attr('mutable-value') || $this.val() || $this.attr('value') || $this.text() || '';
-}
-
-function grabNumber($this){
-    const {checkType} = scripts.validation;
-    let parsed = $this.attr('mutable-value') || $this.val() || $this.attr('value') || $this.text();
-
-    if(checkType(parsed) === 'string'){
-        let number = Number(parsed.replaceAll(' ', ''));
-
-        if(checkType(number) !== 'number') throwError(
-            `The value provided isn't resulting in a number!`,
-            `Please check the value mutable "${mutableName}.`
-        );
-
-        return number;
-    }
-}
-
 export default {
-    getDataFromDOM
+    getDataFromDOM,
 }
