@@ -130,39 +130,17 @@ export default class MutableJS {
 
         const internal = this;
         const mutable = this.mutableStore[name];
+        // ---------------------
+        // Create a different approach here. Store the dependencies into the mutable right on the initialization
         const $mutableNode = $(`[mutable-id='${mutable.ID}']`);
         const dependencies = $mutableNode.attr('mutable-dependencies') || '';
+        // ---------------------
 
         // Updating the mutable value
         update.updateMutableValue(mutable, newValue, this);
 
         // Updating the DOM
-        if ($mutableNode.length) {
-            $mutableNode.map(function (_, node) {
-                const $node = $(this);
-
-                switch (node.nodeName) {
-                    case 'INPUT':
-                    case 'SELECT': {
-                        $node.val(mutable.value);
-                        break;
-                    }
-                    case 'BUTTON': {
-                        break;
-                    }
-                    default: {
-                        switch(mutable.type){
-                            case 'button': {
-                                break;
-                            }
-                            default: {
-                                $node.html(mutable.value);
-                            }
-                        }
-                    }
-                }
-            });
-        }
+        update.updateDOM(mutable);
 
         // Updating dependencies
         dependencies.split(',').map(function (dependency) {

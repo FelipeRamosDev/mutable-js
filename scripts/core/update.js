@@ -33,6 +33,36 @@ function updateMutableValue(mutable, newValue, internal){
     }
 }
 
+function updateDOM(mutable){
+    const $mutableNode = $(`[mutable-id='${mutable.ID}']`);
+
+    $mutableNode.length && $mutableNode.map(function (_, node) {
+        const $node = $(this);
+
+        switch (node.nodeName) {
+            case 'INPUT':
+            case 'SELECT': {
+                $node.val(mutable.value);
+                break;
+            }
+            case 'BUTTON': {
+                break;
+            }
+            default: {
+                switch(mutable.type){
+                    case 'button': {
+                        break;
+                    }
+                    default: {
+                        $node.html(mutable.value);
+                    }
+                }
+            }
+        }
+    });
+}
+
 export default {
-    updateMutableValue
+    updateMutableValue,
+    updateDOM
 }
