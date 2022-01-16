@@ -111,8 +111,19 @@ function addListeners($this, internal, mutable){
     });
 }
 
+function initDependencies($this, mutable){
+    const dependenciesAttr = $this.attr('mutable-dependencies');
+
+    if(dependenciesAttr){
+        const parsed = dependenciesAttr.split(',');
+
+        mutable.dependencies = parsed;
+    }
+}
+
 export default {
     getDataFromDOM,
     treatListeners,
-    addListeners
+    addListeners,
+    initDependencies
 }
