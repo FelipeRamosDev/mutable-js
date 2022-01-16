@@ -48,7 +48,6 @@ export default class MutableJS {
             const mutableType = $this.attr('mutable-type') || 'string';
             let mutableListen = $this.attr('mutable-listen') || '';
             let mutableValue;
-            let mutable;
 
             // Getting values from the DOM and setting some presets depending on what type of mutable is
             mutableValue = init.getDataFromDOM($this, mutableName, mutableType);
