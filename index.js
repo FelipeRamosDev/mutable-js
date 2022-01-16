@@ -36,10 +36,18 @@ export default class MutableJS {
         window[this.name] = this;
     }
 
-    init(){
-        const $mutablesNodes = $('[mutable]');
+    init(options = {
+        mutableName: ''
+    }){
+        let $mutablesNodes;
         const internal = this;
         const mutables = this.mutableStore;
+
+        if(options && options.mutableName) {
+            $mutablesNodes = $(`[mutable="${options.mutableName}"]`);
+        } else {
+            $mutablesNodes = $('[mutable]');
+        }
 
         $mutablesNodes.map(function () {
             const node = this;
@@ -91,7 +99,7 @@ export default class MutableJS {
         return this.mutableStore[name].value;
     }
 
-    set(setup = Mutable.prototype){
+    set(setup = Mutable.prototype, bridge = (input, internal)=>{}){
         const newMutable = new Mutable(setup);
 
         if(this.mutableStore[newMutable.name]) throwError(
