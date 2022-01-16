@@ -65,8 +65,8 @@ export default class MutableJS {
                 });
             } else {
                 // Or updating the value if it's already exists
-                mutables[mutableName].value = bridges[mutableName] ? bridges[mutableName](mutableValue, internal) : mutableValue;
-                // mutables[mutableName].value = mutableValue;
+                const bridge = this.bridges[mutableName];
+                mutables[mutableName].value = bridge ? bridge(mutableValue, internal) : mutableValue;
             }
 
             // Adding the listeners
@@ -101,11 +101,16 @@ export default class MutableJS {
         return this.mutableStore[name].value;
     }
 
+    set(){
+
+    }
+
     update(name, newValue) {
         if (!this.mutableStore[name]) throwError(
             `The mutable value "${name}" isn't exist!`, 
             `You're trying to set the value "${newValue}" for the mutable name "${name}"!`
         );
+
         const internal = this;
         const mutable = this.mutableStore[name];
         const $mutableNode = $(`[mutable-id='${mutable.ID}']`);
