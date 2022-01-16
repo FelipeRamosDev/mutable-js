@@ -2,6 +2,6 @@ import core from './core';
 import validation from './validation';
 
 export default {
-    core,
-    validation,
+    core: core,
+    validation: validation,
 };

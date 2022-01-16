@@ -1,10 +1,11 @@
 import $ from 'jquery';
 import {Mutable} from './models';
-import {logs} from './utils';
+import utils from './utils';
 import scripts from './scripts';
 
-const {throwError} = logs;
+const {throwError} = utils.logs;
 const {
+    core: {init},
     validation: {isPropExist}
 } = scripts;
 
@@ -20,7 +21,7 @@ export default class MutableJS {
             `Error ocurred in the construction of MutableJS "${setup.name}"`
         );
       
-        // Setting the the properties
+        // Setting the properties
         this.name = setup.name;
         this.bridges = setup.bridges || {};
         this.mutableStore = {};
@@ -48,19 +49,11 @@ export default class MutableJS {
             let mutableValue;
 
             // Getting values from the DOM and setting some presets depending on what type of mutable is
-            switch (mutableType) {
-                case 'string': {
-                    mutableValue = $this.val() || $this.attr('value') || $this.html() || '';
-                    break;
-                }
-                case 'number': {
-                    mutableValue = Number($this.val() || $this.attr('value') || $this.html());
-                    break;
-                }
-                case 'button': {
-                    mutableListen = 'click';
-                    break;
-                }
+            mutableValue = init.getDataFromDOM($this, mutableName, mutableType);
+
+            // Setting default listeners
+            if(mutableType === 'button'){
+                mutableListen = 'click';
             }
 
             // Setting new mutable if it doesn't exist
