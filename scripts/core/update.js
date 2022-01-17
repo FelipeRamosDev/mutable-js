@@ -2,21 +2,21 @@ import utils from '../../utils';
 
 const {throwError, error} = utils.logs;
 
-function updateMutableValue(mutable, newValue, internal){
+async function updateMutableValue(mutable, newValue, internal){
     const bridge = internal.bridges[mutable.name];
 
     switch (mutable.type) {
         case 'string': {
-            mutable.value = bridge ? String(bridge(newValue, internal)) : String(newValue || '');
+            mutable.value = bridge ? String(await bridge(newValue, internal)) : String(newValue || '');
             break;
         }
         case 'number': {
             const inputNumber = Number(newValue);
-            mutable.value = bridge ? Number(bridge(inputNumber, internal)) : inputNumber;
+            mutable.value = bridge ? Number(await bridge(inputNumber, internal)) : inputNumber;
             break;
         }
         case 'button': {
-            bridge && bridge(newValue || mutable.value, internal);
+            bridge && await bridge(newValue || mutable.value, internal);
             break;
         }
         default: {

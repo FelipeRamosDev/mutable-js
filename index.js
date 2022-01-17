@@ -44,7 +44,7 @@ export default class MutableJS {
         this.mutation.observe(document, { attributes: true, childList: true, subtree: true });
     }
 
-    init(options = {
+    async init(options = {
         mutableName: ''
     }){
         let $mutablesNodes;
@@ -57,8 +57,8 @@ export default class MutableJS {
             $mutablesNodes = $('[mutable]');
         }
 
-        $mutablesNodes.map(function () {
-            const node = this;
+        for(let i = 0; i < $mutablesNodes.length; i++) {
+            const node = $mutablesNodes[i];
             const $this = $(this);
             const mutableName = $this.attr('mutable');
             const mutableType = $this.attr('mutable-type') || 'string';
@@ -66,7 +66,7 @@ export default class MutableJS {
             let mutableValue;
 
             // Getting values from the DOM and setting some presets depending on what type of mutable is
-            mutableValue = init.getDataFromDOM(internal, $this, mutableName, mutableType);
+            mutableValue = await init.getDataFromDOM(internal, $this, mutableName, mutableType);
 
             // Setting default listeners
             mutableListen = init.treatListeners(node, mutableType, mutableListen);
@@ -92,7 +92,7 @@ export default class MutableJS {
             // Setting the mutable as initialized
             mutables[mutableName].initialized = true;
             mutables[mutableName].$mutableNodes = $(`[mutable="${mutableName}"]`);
-        });
+        };
 
         // Refreshing all mutables
         this.refresh();
@@ -133,12 +133,12 @@ export default class MutableJS {
         return newMutable;
     }
 
-    runBridge(mutableName, input){
+    async runBridge(mutableName, input){
         if(!this.bridges[mutableName]) throwError(
             `The mutable bridge "${mutableName}" isn't exist!`
         );
 
-        return this.bridges[mutableName](input, this);
+        return await this.bridges[mutableName](input, this);
     }
 
     setBridge(mutableName = '', bridge = (input, internal = MutableJS.prototype )=>{}){

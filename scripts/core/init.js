@@ -22,7 +22,7 @@ const getFromDomMethods = {
     }
 }
 
-function getDataFromDOM(internal, $this, mutableName, mutableType){
+async function getDataFromDOM(internal, $this, mutableName, mutableType){
     const {throwError, error} = utils.logs;
     const bridge = internal.bridges[mutableName];
     let mutableValue;
@@ -30,12 +30,17 @@ function getDataFromDOM(internal, $this, mutableName, mutableType){
     switch (mutableType) {
         case 'string': {
             const value = getFromDomMethods.string($this, mutableName);
-            mutableValue = bridge ? bridge(value, internal) : value;
+
+            if(bridge){
+                mutableValue = await bridge(value, internal);
+            } else {
+                mutableValue =  value;
+            }
             break;
         }
         case 'number': {
             const value = getFromDomMethods.number($this, mutableName);
-            mutableValue = bridge ? bridge(value, internal) : value;
+            mutableValue = bridge ? await bridge(value, internal) : value;
             break;
         }
         case 'object': {
