@@ -117,16 +117,16 @@ export default class MutableJS {
     }
 
     runBridge(mutableName, input){
-        if(!this.bridge[mutableName]) throwError(
+        if(!this.bridges[mutableName]) throwError(
             `The mutable bridge "${mutableName}" isn't exist!`
         );
 
-        return this.bridge[mutableName](input, this);
+        return this.bridges[mutableName](input, this);
     }
 
     setBridge(mutableName = '', bridge = (input, internal = MutableJS.prototype )=>{}){
         if(!this.mutableStore[mutableName]) throwError(
-            `The mutable value "${mutableName}" isn't exist!`, 
+            `The mutable "${mutableName}" isn't exist!`, 
             `You need to create a mutable before setting a new bridge!`
         );
         
@@ -135,7 +135,7 @@ export default class MutableJS {
 
     update(name, newValue) {
         if (!this.mutableStore[name]) throwError(
-            `The mutable value "${name}" isn't exist!`, 
+            `The mutable "${name}" isn't exist!`, 
             `You're trying to set the value "${newValue}" for the mutable name "${name}"!`
         );
 
@@ -149,8 +149,6 @@ export default class MutableJS {
         update.updateDOM(mutable);
 
         // Updating dependencies
-        mutable.dependencies.map(function (dependency) {
-            if (dependency) internal.update(dependency, internal.mutableStore[dependency] ? internal.mutableStore[dependency].value : '');
-        });
+        update.runDependencies(internal, mutable);
     }
 }
