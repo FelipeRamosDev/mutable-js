@@ -1,3 +1,7 @@
+import utils from '../../utils';
+
+const {throwError, error} = utils.logs;
+
 function updateMutableValue(mutable, newValue, internal){
     const bridge = internal.bridges[mutable.name];
 
@@ -62,7 +66,30 @@ function updateDOM(mutable){
     });
 }
 
+function runDependencies(internal, updatedMutable){
+    const mutables = internal.mutableStore;
+
+    Object.keys(mutables).map(mut=>{
+        if(mut !== updatedMutable.name){
+            const current = mutables[mut];
+            const filteredDependency = current.dependencies.find(dep=>dep === updatedMutable.name);
+    
+            if(filteredDependency){
+                const filteredMutable = internal.mutableStore[filteredDependency];
+    
+                if (!filteredMutable) throwError(
+                    `The mutable "${filteredDependency}" isn't exist!`, 
+                    `You're trying to set the value "${filteredMutable.value}" for the mutable name "${filteredDependency}"!`
+                );
+
+                internal.update(current.name, current.value);
+            }
+        }
+    });
+}
+
 export default {
     updateMutableValue,
-    updateDOM
+    updateDOM,
+    runDependencies
 }
