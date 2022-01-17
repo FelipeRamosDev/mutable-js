@@ -89,14 +89,26 @@ function runDependencies(internal, updatedMutable){
 }
 
 function initUninitialized(internal){
-    Object.keys(internal.mutableStore).map(key=>{
-        const current = internal.mutableStore[key];
-        const $node = $(`[mutable="${current.name}"]`);
-        const hasID = $node.not('[mutable-id]').length;
+    const $mutables = $(`[mutable]`);
 
-        if(!current.initialized || hasID){
-            internal.init(key);
-            current.initialized = true;
+    $mutables.map((_, dom)=>{
+        const $this = $(dom);
+        const mutableName = $this.attr('mutable');
+
+        if(mutableName){
+            const current = internal.mutableStore[mutableName];
+            const noID = $this.not('[mutable-id]').length;
+            const $DOMMutables = $(`[mutable="${mutableName}"]`);
+            const isEqual = ($DOMMutables.length === current.$mutableNodes.length)
+            
+            if(current){
+                if(!current.initialized || noID || !isEqual){
+                    internal.init(mutableName);
+                    current.initialized = true;
+                }
+            } else {
+                internal.init(mutableName);
+            }
         }
     });
 }
