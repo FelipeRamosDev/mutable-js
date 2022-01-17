@@ -17,7 +17,8 @@ export default class Mutable {
         type: '',
         value: '',
         listen: [MutableListen.prototype],
-        dependencies: []
+        dependencies: [],
+        initialized: Boolean()
     }){
         // Checking required properties
         if(!isPropExist(setup, ['name'])) logs.throwError(
@@ -31,6 +32,7 @@ export default class Mutable {
         this.value = setup.value;
         this.listen = setup.listen || []
         this.dependencies = setup.dependencies || [];
+        this.initialized = setup.initialized ? true : false;
     }
 }
 

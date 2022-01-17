@@ -118,9 +118,13 @@ function blendListeners(splitedEvents, eventsToBlend){
 
 function addListeners($this, internal, mutable){
     Object.keys(mutable.listen).map((current)=>{
-        $this.on(current, (ev)=>{
-            internal.update(mutable.name, ev.target.value);
-        });
+        const currentEvents = getJQueryEvents($this);
+
+        if(!currentEvents || !currentEvents[current]){
+            $this.on(current, (ev)=>{
+                internal.update(mutable.name, ev.target.value);
+            });
+        }
     });
 }
 
@@ -134,8 +138,15 @@ function initDependencies($this, mutable){
     }
 }
 
-function initBridge(internal){
+function getJQueryEvents($this){
+    const matchedProp = $this.length && Object.keys($this[0]).find(current=>{
+        const match = current.match('jQuery');
+        if(match && match.length && match.index === 0){
+            return $this[0][current];
+        }
+    });
 
+    return matchedProp && $this[0] && $this[0][matchedProp] && $this[0][matchedProp].events;
 }
 
 export default {

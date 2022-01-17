@@ -88,8 +88,22 @@ function runDependencies(internal, updatedMutable){
     });
 }
 
+function initUninitialized(internal){
+    Object.keys(internal.mutableStore).map(key=>{
+        const current = internal.mutableStore[key];
+        const $node = $(`[mutable="${current.name}"]`);
+        const hasID = $node.not('[mutable-id]').length;
+
+        if(!current.initialized || hasID){
+            internal.init(key);
+            current.initialized = true;
+        }
+    });
+}
+
 export default {
     updateMutableValue,
     updateDOM,
-    runDependencies
+    runDependencies,
+    initUninitialized
 }
