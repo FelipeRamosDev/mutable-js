@@ -104,7 +104,6 @@ function initUninitialized(internal){
             if(current){
                 if(!current.initialized || noID || !isEqual){
                     internal.init(mutableName);
-                    // current.$mutableNodes = $($DOMMutables);
                     current.initialized = true;
                 }
             } else {
