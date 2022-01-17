@@ -38,10 +38,10 @@ export default class MutableJS {
         window[this.name] = this;
 
         // Declaring the MutationObserver
-        const mutation = new window.MutationObserver((mutations, observer)=>{
+        this.mutation = new window.MutationObserver(()=>{
             internal.scanUninitialized();
         });
-        mutation.observe(document, { attributes: true, childList: true, subtree: true });
+        this.mutation.observe(document, { attributes: true, childList: true, subtree: true });
     }
 
     init(options = {
@@ -91,6 +91,7 @@ export default class MutableJS {
 
             // Setting the mutable as initialized
             mutables[mutableName].initialized = true;
+            mutables[mutableName].$mutableNodes = $(`[mutable="${mutableName}"]`);
         });
 
         // Refreshing all mutables

@@ -18,7 +18,8 @@ export default class Mutable {
         value: '',
         listen: [MutableListen.prototype],
         dependencies: [],
-        initialized: Boolean()
+        initialized: Boolean(),
+        $mutableNodes: jQuery
     }){
         // Checking required properties
         if(!isPropExist(setup, ['name'])) logs.throwError(
