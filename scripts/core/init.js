@@ -119,12 +119,24 @@ function blendListeners(splitedEvents, eventsToBlend){
 function addListeners($this, internal, mutable){
     Object.keys(mutable.listen).map((current)=>{
         const currentEvents = getJQueryEvents($this);
-
-        if(!currentEvents || !currentEvents[current]){
+        let mutableListenRef = mutable.listen[current].ref;
+        
+        if(!mutableListenRef){
             $this.on(current, (ev)=>{
                 internal.update(mutable.name, ev.target.value);
             });
+            const currentEv = currentEvents[current];
+            mutable.listen[current].ref = currentEv && currentEv[currentEv.length - 1];
+        } else {
+            const filtered = currentEvents[current] && currentEvents[current].find(ev=>ev.handler === mutableListenRef.handler);
+
+            if(!filtered){
+                $this.on(current, (ev)=>{
+                    internal.update(mutable.name, ev.target.value);
+                });
+            }
         }
+     
     });
 }
 
@@ -146,7 +158,7 @@ function getJQueryEvents($this){
         }
     });
 
-    return matchedProp && $this[0] && $this[0][matchedProp] && $this[0][matchedProp].events;
+    return matchedProp && $this[0] && $this[0][matchedProp] && $this[0][matchedProp].events || {};
 }
 
 export default {
