@@ -15,6 +15,8 @@ export default class MutableJS {
         mutableStore: [Mutable.prototype],
         bridges: Object(),
     }){
+        const internal = this;
+
         // Checking the required properties
         if(!isPropExist(setup, ['name'])) throwError(
             `There is a required property missing!`, 
@@ -34,6 +36,12 @@ export default class MutableJS {
         // Initializing mutables
         this.init();
         window[this.name] = this;
+
+        // Declaring the MutationObserver
+        const mutation = new window.MutationObserver((mutations, observer)=>{
+            internal.scanUninitialized();
+        });
+        mutation.observe(document, { attributes: true, childList: true, subtree: true });
     }
 
     init(options = {
@@ -68,7 +76,8 @@ export default class MutableJS {
                 name: mutableName,
                 type: mutableType,
                 value: mutableValue,
-                listen: mutableListen
+                listen: mutableListen,
+                initialized: true
             });
 
             // Adding the listeners
@@ -79,6 +88,9 @@ export default class MutableJS {
 
             // Setting mutable-id to update the values later
             $this.attr('mutable-id', mutables[mutableName].ID);
+
+            // Setting the mutable as initialized
+            mutables[mutableName].initialized = true;
         });
 
         // Refreshing all mutables
@@ -96,6 +108,10 @@ export default class MutableJS {
                 internal.update(key, mutables[key].value);
             }
         });
+    }
+
+    scanUninitialized(){
+        update.initUninitialized(this);
     }
 
     get(name){
