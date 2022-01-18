@@ -2,6 +2,7 @@ import $ from 'jquery';
 import {Mutable} from './models';
 import utils from './utils';
 import scripts from './scripts';
+import resources from './resources';
 
 const {throwError} = utils.logs;
 const {
@@ -16,12 +17,10 @@ export default class MutableJS {
         bridges: Object(),
     }){
         const internal = this;
+        const requiredProps = ['name'];
 
         // Checking the required properties
-        if(!isPropExist(setup, ['name'])) throwError(
-            `There is a required property missing!`, 
-            `Error ocurred in the construction of MutableJS "${setup.name}"`
-        );
+        if(!isPropExist(setup, requiredProps)) resources.errorLogs.global.requiredProps('MutableJS', requiredProps);
       
         // Setting the properties
         this.name = setup.name;
@@ -36,6 +35,7 @@ export default class MutableJS {
         // Initializing mutables
         this.init();
         window[this.name] = this;
+        window.MutableJSResources = resources;
 
         // Declaring the MutationObserver
         this.mutation = new window.MutationObserver(()=>{
@@ -116,7 +116,7 @@ export default class MutableJS {
     }
 
     get(name){
-        return this.mutableStore[name].value;
+        return this.mutableStore[name] && this.mutableStore[name].value;
     }
 
     set(setup = Mutable.prototype, bridge){
