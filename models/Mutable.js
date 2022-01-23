@@ -21,7 +21,7 @@ export default class Mutable {
         listen: [MutableListen.prototype],
         dependencies: [],
         initialized: Boolean(),
-        $mutableNodes: jQuery
+        uidsRelated: []
     }){
         // Checking required properties
         if(!isPropExist(setup, ['name'])) errorLogs.mutableModelRequiredPropMissing(this);
@@ -33,6 +33,7 @@ export default class Mutable {
         this.listen = setup.listen || []
         this.dependencies = setup.dependencies || [];
         this.initialized = setup.initialized ? true : false;
+        this.uidsRelated = setup.uidsRelated || [];
     }
 }
 

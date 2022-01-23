@@ -1,7 +1,5 @@
-import utils from '../../utils';
 import resources from '../../resources';
 
-const {throwError} = utils.logs;
 const {errorLogs} = resources;
 
 function updateMutableValue(mutable, newValue, internal){
@@ -22,6 +20,7 @@ function updateMutableValue(mutable, newValue, internal){
             break;
         }
         default: {
+            mutable.type = 'string';
             errorLogs.mutableTypeIsIncorrect($this, mutable.type, mutable.name);
         }
     }
@@ -57,7 +56,7 @@ function updateDOM(mutable){
 }
 
 function runDependencies(internal, updatedMutable){
-    const mutables = internal.mutableStore;
+    const mutables = internal.mutables;
 
     Object.keys(mutables).map(mut=>{
         if(mut !== updatedMutable.name){
@@ -65,7 +64,7 @@ function runDependencies(internal, updatedMutable){
             const filteredDependency = current.dependencies.find(dep=>dep === updatedMutable.name);
     
             if(filteredDependency){
-                const filteredMutable = internal.mutableStore[filteredDependency];
+                const filteredMutable = internal.mutables[filteredDependency];
                 if (!filteredMutable) errorLogs.mutableNameDontExistRunningDependencies(filteredDependency);
 
                 internal.update(current.name, current.value);
@@ -74,28 +73,19 @@ function runDependencies(internal, updatedMutable){
     });
 }
 
-function initUninitialized(internal){
-    const $mutables = $(`[mutable]`);
+function initUninitialized(internal, mutations){
+    mutations.map(mut=>{
+        const $mutables = $(mut.target).find('[mutable]');
 
-    $mutables.map((_, dom)=>{
-        const $this = $(dom);
-        const mutableName = $this.attr('mutable');
+        $mutables.map((_, nodeHTML)=>{
+            const $this = $(nodeHTML);
+            const mutableName = $this.attr('mutable');
+            const current = internal.mutables[mutableName];
 
-        if(mutableName){
-            const current = internal.mutableStore[mutableName];
-            const noID = $this.not('[mutable-id]').length;
-            const $DOMMutables = $(`[mutable="${mutableName}"]`);
-            const isEqual = ($DOMMutables.length === current.$mutableNodes.length)
-
-            if(current){
-                if(!current.initialized || noID || !isEqual){
-                    internal.init(mutableName);
-                    current.initialized = true;
-                }
-            } else {
+            if(!current || !nodeHTML.mutableInit){
                 internal.init(mutableName);
             }
-        }
+        });
     });
 }
 
