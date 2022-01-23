@@ -22,7 +22,7 @@ export default class MutableJS {
 
         // Checking the required properties
         if(!isPropExist(setup, requiredProps)) resources.errorLogs.requiredProps('MutableJS', requiredProps);
-      
+
         // Setting the properties
         this.name = setup.name;
         this.bridges = setup.bridges || {};
@@ -100,7 +100,6 @@ export default class MutableJS {
                 $this.attr('mutable-id', mutable.ID);
                 $this.attr('mutable-uid', nodeUID);
                 
-                
                 // Setting the mutable as initialized
                 mutable.initialized = true;
                 mutable.uidsRelated = [...mutable.uidsRelated, nodeUID];
@@ -130,7 +129,8 @@ export default class MutableJS {
     }
 
     get(name){
-        return this.mutables[name].value;
+        if(!this.mutables[name]) errorLogs.getMutableNameDontExist(name);
+        return this.mutables[name];
     }
 
     set(setup = Mutable.prototype, bridge){
