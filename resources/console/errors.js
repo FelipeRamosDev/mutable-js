@@ -52,14 +52,14 @@ const errorLogs = {
     mutableTypeIsIncorrect: ($this, mutableType, mutableName)=>{
         error($this, 'An error occured on the node above!');
         throwError(
-            `The mutable type is incorrect! It's provided "${mutableType}". \n
-            The only mutable types allowed is:\n
-            'string'\n
-            'number'\n
-            'object'\n
-            'array'\n
-            'button'\n
-            'html'\n
+            `The mutable type is incorrect! It's provided "${mutableType}".
+            The only mutable types allowed is:
+            'string'
+            'number'
+            'object'
+            'array'
+            'button'
+            'html'
             'component'`,
             `Please check the value mutable "${mutableName}.`
         );
@@ -82,6 +82,11 @@ const errorLogs = {
             'Error occured on isPropExist().'
         );
     
+    },
+    getMutableNameDontExist: (mutableName)=>{
+        throwError(
+            `The mutable "${mutableName}" doesn't exist!`
+        );
     }
 };
 
