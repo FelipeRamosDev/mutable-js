@@ -1,6 +1,9 @@
 import scripts from '../../scripts';
 import utils from '../../utils';
 import {MutableListen} from '../../models';
+import resources from '../../resources';
+
+const {errorLogs} = resources;
 
 const getFromDomMethods = {
     string: ($this)=>{
@@ -9,15 +12,11 @@ const getFromDomMethods = {
     },
     number: ($this, mutableName)=>{
         const {checkType} = scripts.validation;
-        const {throwError} = utils.logs;
         let parsed = $this.attr('mutable-value') || $this.val() || $this.attr('value') || $this.text();
         let number = Number(parsed.replaceAll(' ', ''));
 
-        if(checkType(number) !== 'number') throwError(
-            `The value provided isn't resulting in a number!`,
-            `Please check the value mutable "${mutableName}".`
-        );
-
+        // The mutable value here need to result in a number
+        if(checkType(number) !== 'number') errorLogs.initGetFromDOMValueIsntNumber(mutableName);
         return number;
     }
 }
@@ -54,19 +53,7 @@ function getDataFromDOM(internal, $this, mutableName, mutableType){
             break;
         }
         default: {
-            error($this, 'An error occured on the node above!');
-            throwError(
-                `The mutable type is incorrect! It's provided "${mutableType}". \n
-                The only mutable types allowed is:\n
-                'string'\n
-                'number'\n
-                'object'\n
-                'array'\n
-                'button'\n
-                'html'\n
-                'component'`,
-                `Please check the value mutable "${mutableName}.`
-            );
+            errorLogs.mutableTypeIsIncorrect($this, mutableType, mutableName);
         }
     }
 

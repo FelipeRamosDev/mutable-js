@@ -1,6 +1,8 @@
 import utils from '../../utils';
+import resources from '../../resources';
 
-const {error, throwError} = utils.logs;
+const {error} = utils.logs;
+const {errorLogs} = resources;
 
 function isEmpty(value){
     const type = typeof value;
@@ -36,6 +38,7 @@ function checkType(value){
         case 'string':
         case 'number':
         case 'date': {
+            if(type === 'number' && isNaN(value)) return 'NaN'
             return type;
         }
         case 'object': {
@@ -53,16 +56,9 @@ function checkType(value){
 }
 
 function isPropExist(obj = {}, props = ['']){
+    if(checkType(obj) !== 'object') errorLogs.isPropExistTypePropIsNotAnObject();
+    if(checkType(props) !== 'array') errorLogs.isPropExistPropsParamIsNotAnArray();
     let result = true;
-
-    if(checkType(obj) !== 'object') throwError(
-        `Type of provided parameter "obj" isn't an object!`, 
-        'Error occured on isPropExist().'
-    );
-    if(checkType(props) !== 'array') throwError(
-        `Type of provided parameter "props" isn't an array! Please provide an array with the name of the required properties.`, 
-        'Error occured on isPropExist().'
-    );
 
     props.map(prop=>{
         if(!obj[prop]){

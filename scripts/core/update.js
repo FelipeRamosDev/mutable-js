@@ -1,6 +1,8 @@
 import utils from '../../utils';
+import resources from '../../resources';
 
-const {throwError, error} = utils.logs;
+const {throwError} = utils.logs;
+const {errorLogs} = resources;
 
 function updateMutableValue(mutable, newValue, internal){
     const bridge = internal.bridges[mutable.name];
@@ -20,19 +22,7 @@ function updateMutableValue(mutable, newValue, internal){
             break;
         }
         default: {
-            error($this, 'An error occured on the node above!');
-            throwError(
-                `The mutable type is incorrect! It's provided "${mutable.type}".\n
-                The only mutable types allowed is:\n
-                'string'\n
-                'number'\n
-                'object'\n
-                'array'\n
-                'button'\n
-                'html'\n
-                'component'\n`,
-                `Please check the value mutable "${mutable.name}.`
-            );
+            errorLogs.mutableTypeIsIncorrect($this, mutable.type, mutable.name);
         }
     }
 }
@@ -76,11 +66,7 @@ function runDependencies(internal, updatedMutable){
     
             if(filteredDependency){
                 const filteredMutable = internal.mutableStore[filteredDependency];
-    
-                if (!filteredMutable) throwError(
-                    `The mutable "${filteredDependency}" isn't exist!`, 
-                    `You're trying to set the value "${filteredMutable.value}" for the mutable name "${filteredDependency}"!`
-                );
+                if (!filteredMutable) errorLogs.mutableNameDontExistRunningDependencies(filteredDependency);
 
                 internal.update(current.name, current.value);
             }
@@ -100,7 +86,7 @@ function initUninitialized(internal){
             const noID = $this.not('[mutable-id]').length;
             const $DOMMutables = $(`[mutable="${mutableName}"]`);
             const isEqual = ($DOMMutables.length === current.$mutableNodes.length)
-            
+
             if(current){
                 if(!current.initialized || noID || !isEqual){
                     internal.init(mutableName);
