@@ -1,10 +1,9 @@
 import $ from 'jquery';
 import {Mutable} from './models';
-import utils from './utils';
 import scripts from './scripts';
 import resources from './resources';
+import errorLogs from './resources/logs/errors';
 
-const {throwError} = utils.logs;
 const {
     core: {init, update},
     validation: {isPropExist}
@@ -20,7 +19,7 @@ export default class MutableJS {
         const requiredProps = ['name'];
 
         // Checking the required properties
-        if(!isPropExist(setup, requiredProps)) resources.errorLogs.global.requiredProps('MutableJS', requiredProps);
+        if(!isPropExist(setup, requiredProps)) resources.errorLogs.requiredProps('MutableJS', requiredProps);
       
         // Setting the properties
         this.name = setup.name;
@@ -116,45 +115,34 @@ export default class MutableJS {
     }
 
     get(name){
-        return this.mutableStore[name] && this.mutableStore[name].value;
+        return this.mutableStore[name].value;
     }
 
     set(setup = Mutable.prototype, bridge){
         const newMutable = new Mutable(setup);
+        if(this.mutableStore[newMutable.name]) errorLogs.setMutableNameDuplicated(internal, newMutable);
 
-        if(this.mutableStore[newMutable.name]) throwError(
-            `The mutable name "${newMutable.name}" already exists! Please use another one!`,
-            `This error occured on the set method of "${this.name}" MutableJS!`
-        );
-
+        // Setting the new mutable value into mutable core and running the bridge
         this.mutableStore[newMutable.name] = newMutable;
-
         if(bridge) this.setBridge(newMutable.name, bridge);
+
         return newMutable;
     }
 
     runBridge(mutableName, input){
-        if(!this.bridges[mutableName]) throwError(
-            `The mutable bridge "${mutableName}" isn't exist!`
-        );
+        if(!this.bridges[mutableName]) errorLogs.runBridgeNameDontExist(mutableName)
 
         return this.bridges[mutableName](input, this);
     }
 
     setBridge(mutableName = '', bridge = (input, internal = MutableJS.prototype )=>{}){
-        if(!this.mutableStore[mutableName]) throwError(
-            `The mutable "${mutableName}" isn't exist!`, 
-            `You need to create a mutable before setting a new bridge!`
-        );
+        if(!this.mutableStore[mutableName]) errorLogs.setBridgeMutableNameDontExist(mutableName);
         
         this.bridges[mutableName] = bridge;
     }
 
     update(name, newValue) {
-        if (!this.mutableStore[name]) throwError(
-            `The mutable "${name}" isn't exist!`, 
-            `You're trying to set the value "${newValue}" for the mutable name "${name}"!`
-        );
+        if (!this.mutableStore[name]) errorLogs.updateMutableNameDontExist(name, newValue)
 
         const internal = this;
         const mutable = this.mutableStore[name];

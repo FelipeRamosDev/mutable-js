@@ -1,10 +1,12 @@
 import utils from '../utils';
 import scripts from '../scripts';
+import resources from '../resources';
 
 const {
     validation: {isPropExist}
 } = scripts;
 const {tools, logs} = utils;
+const {errorLogs} = resources;
 
 // Defaults values
 const defaults = {
@@ -22,10 +24,7 @@ export default class Mutable {
         $mutableNodes: jQuery
     }){
         // Checking required properties
-        if(!isPropExist(setup, ['name'])) logs.throwError(
-            `There is a required property missing!`, 
-            `Error ocurred in the construction of Mutable model "${this.name}"`
-        );
+        if(!isPropExist(setup, ['name'])) errorLogs.mutableModelRequiredPropMissing(this);
 
         this.ID = setup.ID || tools.genCode(20);
         this.name = setup.name;
@@ -42,9 +41,8 @@ export class MutableListen {
         evName: '',
         ref: 0,
     }){
-        if(!isPropExist(setup, ['evName'])) logs.throwError(
-            `The evName property is required to construct a MutableListen!`
-        );
+        // Checking required props
+        if(!isPropExist(setup, ['evName'])) errorLogs.mutableListenModelRequiredPropsMissing();
 
         this.evName = setup.evName;
         this.ref = setup.ref;
