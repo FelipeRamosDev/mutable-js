@@ -1,18 +1,20 @@
 import $ from 'jquery';
 import {Mutable} from './models';
 import scripts from './scripts';
+import utils from './utils';
 import resources from './resources';
-import errorLogs from './resources/logs/errors';
+import errorLogs from './resources/console/errors';
 
 const {
     core: {init, update},
     validation: {isPropExist}
 } = scripts;
+const {tools} = utils;
 
 export default class MutableJS {
     constructor(setup = {
         name: String(),
-        mutableStore: [Mutable.prototype],
+        mutables: [Mutable.prototype],
         bridges: Object(),
     }){
         const internal = this;
@@ -24,11 +26,11 @@ export default class MutableJS {
         // Setting the properties
         this.name = setup.name;
         this.bridges = setup.bridges || {};
-        this.mutableStore = {};
+        this.mutables = {};
 
         // Setting mutables provided as argument in the construction
-        if(setup && setup.mutableStore && Array.isArray(setup.mutableStore)) setup.mutableStore.map(set=>{
-            this.mutableStore[set.name] = new Mutable(set);
+        if(setup && setup.mutables && Array.isArray(setup.mutables)) setup.mutables.map(set=>{
+            this.mutables[set.name] = new Mutable(set);
         });
 
         // Initializing mutables
@@ -37,10 +39,12 @@ export default class MutableJS {
         window.MutableJSResources = resources;
 
         // Declaring the MutationObserver
-        this.mutation = new window.MutationObserver(()=>{
-            internal.scanUninitialized();
-        });
-        this.mutation.observe(document, { attributes: true, childList: true, subtree: true });
+        if(window.MutationObserver){
+            this.mutation = new window.MutationObserver((lastMutations)=>{
+                internal.scanUninitialized(lastMutations);
+            });
+            this.mutation.observe(document, { attributes: true, childList: true, subtree: true });
+        }
     }
 
     init(options = {
@@ -48,7 +52,7 @@ export default class MutableJS {
     }){
         let $mutablesNodes;
         const internal = this;
-        const mutables = this.mutableStore;
+        const mutables = this.mutables;
 
         if(options && options.mutableName) {
             $mutablesNodes = $(`[mutable="${options.mutableName}"]`);
@@ -58,39 +62,50 @@ export default class MutableJS {
 
         $mutablesNodes.map(function () {
             const node = this;
-            const $this = $(this);
-            const mutableName = $this.attr('mutable');
-            const mutableType = $this.attr('mutable-type') || 'string';
-            let mutableListen = $this.attr('mutable-listen') || '';
-            let mutableValue;
 
-            // Getting values from the DOM and setting some presets depending on what type of mutable is
-            mutableValue = init.getDataFromDOM(internal, $this, mutableName, mutableType);
-
-            // Setting default listeners
-            mutableListen = init.treatListeners(node, mutableType, mutableListen);
-
-            // Setting new mutable if it doesn't exist
-            !mutables[mutableName] && internal.set({
-                name: mutableName,
-                type: mutableType,
-                value: mutableValue,
-                listen: mutableListen,
-                initialized: true
-            });
-
-            // Adding the listeners
-            init.addListeners($this, internal, mutables[mutableName]);
-
-            // Initializing dependencies
-            init.initDependencies($this, mutables[mutableName]);
-
-            // Setting mutable-id to update the values later
-            $this.attr('mutable-id', mutables[mutableName].ID);
-
-            // Setting the mutable as initialized
-            mutables[mutableName].initialized = true;
-            mutables[mutableName].$mutableNodes = $(`[mutable="${mutableName}"]`);
+            if(!node.mutableInit){
+                const $this = $(this);
+                const nodeUID = tools.genCode(20);
+                const mutableName = $this.attr('mutable');
+                const mutableType = $this.attr('mutable-type') || 'string';
+                let mutableListen = $this.attr('mutable-listen') || '';
+                let mutableValue;
+    
+                // Getting values from the DOM and setting some presets depending on what type of mutable is
+                mutableValue = init.getDataFromDOM(internal, $this, mutableName, mutableType);
+    
+                // Setting default listeners
+                mutableListen = init.treatListeners(node, mutableType, mutableListen);
+    
+                // Setting new mutable if it doesn't exist
+                if(!mutables[mutableName]){
+                    internal.set({
+                        name: mutableName,
+                        type: mutableType,
+                        value: mutableValue,
+                        listen: mutableListen,
+                        initialized: true,
+                    });
+                }
+    
+                let mutable = mutables[mutableName];
+    
+                // Adding the listeners
+                init.addListeners($this, internal, mutable);
+    
+                // Initializing dependencies
+                init.initDependencies($this, mutable);
+    
+                // Setting mutable-id to update the values later
+                $this.attr('mutable-id', mutable.ID);
+                $this.attr('mutable-uid', nodeUID);
+                
+                
+                // Setting the mutable as initialized
+                mutable.initialized = true;
+                mutable.uidsRelated = [...mutable.uidsRelated, nodeUID];
+                node.mutableInit = true;
+            }
         });
 
         // Refreshing all mutables
@@ -99,7 +114,7 @@ export default class MutableJS {
 
     refresh(){
         const internal = this;
-        const mutables = this.mutableStore;
+        const mutables = this.mutables;
 
         Object.keys(mutables).map((key)=>{
             const type = mutables[key].type;
@@ -110,20 +125,20 @@ export default class MutableJS {
         });
     }
 
-    scanUninitialized(){
-        update.initUninitialized(this);
+    scanUninitialized(mutations){
+        update.initUninitialized(this, mutations);
     }
 
     get(name){
-        return this.mutableStore[name].value;
+        return this.mutables[name].value;
     }
 
     set(setup = Mutable.prototype, bridge){
         const newMutable = new Mutable(setup);
-        if(this.mutableStore[newMutable.name]) errorLogs.setMutableNameDuplicated(internal, newMutable);
+        if(this.mutables[newMutable.name]) errorLogs.setMutableNameDuplicated(internal, newMutable);
 
         // Setting the new mutable value into mutable core and running the bridge
-        this.mutableStore[newMutable.name] = newMutable;
+        this.mutables[newMutable.name] = newMutable;
         if(bridge) this.setBridge(newMutable.name, bridge);
 
         return newMutable;
@@ -136,16 +151,16 @@ export default class MutableJS {
     }
 
     setBridge(mutableName = '', bridge = (input, internal = MutableJS.prototype )=>{}){
-        if(!this.mutableStore[mutableName]) errorLogs.setBridgeMutableNameDontExist(mutableName);
+        if(!this.mutables[mutableName]) errorLogs.setBridgeMutableNameDontExist(mutableName);
         
         this.bridges[mutableName] = bridge;
     }
 
     update(name, newValue) {
-        if (!this.mutableStore[name]) errorLogs.updateMutableNameDontExist(name, newValue)
+        if (!this.mutables[name]) errorLogs.updateMutableNameDontExist(name, newValue)
 
         const internal = this;
-        const mutable = this.mutableStore[name];
+        const mutable = this.mutables[name];
 
         // Updating the mutable object value
         update.updateMutableValue(mutable, newValue, this);

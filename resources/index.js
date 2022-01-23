@@ -1,4 +1,4 @@
-import errorLogs from './logs/errors';
+import errorLogs from './console/errors';
 
 export default {
     errorLogs

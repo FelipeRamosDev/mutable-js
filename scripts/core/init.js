@@ -22,7 +22,6 @@ const getFromDomMethods = {
 }
 
 function getDataFromDOM(internal, $this, mutableName, mutableType){
-    const {throwError, error} = utils.logs;
     const bridge = internal.bridges[mutableName];
     let mutableValue;
 
