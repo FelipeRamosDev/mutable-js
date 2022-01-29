@@ -20,8 +20,8 @@ function updateMutableValue(mutable, newValue, internal){
             break;
         }
         default: {
+            errorLogs.mutableTypeIsIncorrect(mutable, mutable.type, mutable.name);
             mutable.type = 'string';
-            errorLogs.mutableTypeIsIncorrect($this, mutable.type, mutable.name);
         }
     }
 }

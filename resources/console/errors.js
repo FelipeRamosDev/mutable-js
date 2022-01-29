@@ -52,16 +52,9 @@ const errorLogs = {
     mutableTypeIsIncorrect: ($this, mutableType, mutableName)=>{
         error($this, 'An error occured on the node above!');
         throwError(
-            `The mutable type is incorrect! It's provided "${mutableType}".
-            The only mutable types allowed is:
-            'string'
-            'number'
-            'object'
-            'array'
-            'button'
-            'html'
-            'component'`,
-            `Please check the value mutable "${mutableName}.`
+            `The mutable type is incorrect! It's provided "${mutableType}".\n\n`+
+            `The only mutable types allowed is: 'string', 'number', 'object', 'array', 'button', 'html', 'component'\n`,
+            `Please check the value mutable "${mutableName}".`
         );
     },
     mutableNameDontExistRunningDependencies: (filteredDependency)=>{
