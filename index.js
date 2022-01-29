@@ -1,158 +1,174 @@
 import $ from 'jquery';
-import {utilTools} from './utils';
+import {Mutable} from './models';
+import scripts from './scripts';
+import utils from './utils';
+import resources from './resources';
+import errorLogs from './resources/console/errors';
 
-const {genCode} = utilTools;
-export default class MutableValues {
+const {
+    core: {init, update},
+    validation: {isPropExist}
+} = scripts;
+const {tools} = utils;
+
+export default class MutableJS {
     constructor(setup = {
+        name: String(),
+        mutables: [Mutable.prototype],
         bridges: Object(),
-    }) {
-        this.mutables = {};
-        this.bridges = setup.bridges || {};
+    }){
+        const internal = this;
+        const requiredProps = ['name'];
 
+        // Checking the required properties
+        if(!isPropExist(setup, requiredProps)) resources.errorLogs.requiredProps('MutableJS', requiredProps);
+
+        // Setting the properties
+        this.name = setup.name;
+        this.bridges = setup.bridges || {};
+        this.mutables = {};
+
+        // Setting mutables provided as argument in the construction
+        if(setup && setup.mutables && Array.isArray(setup.mutables)) setup.mutables.map(set=>{
+            this.mutables[set.name] = new Mutable(set);
+        });
+
+        // Initializing mutables
         this.init();
+        window[this.name] = this;
+        window.MutableJSResources = resources;
+
+        // Declaring the MutationObserver
+        if(window.MutationObserver){
+            this.mutation = new window.MutationObserver((lastMutations)=>{
+                internal.scanUninitialized(lastMutations);
+            });
+            this.mutation.observe(document, { attributes: true, childList: true, subtree: true });
+        }
     }
 
-    init(HTMLNode) {
-        let mutablesNodes;
-        let $htmlNode;
-        if(HTMLNode) {
-            $htmlNode = $(HTMLNode);
-            mutablesNodes = $htmlNode.attr('mutable') ? $htmlNode : $htmlNode.find('[mutable]');
-        } else {
-            mutablesNodes = $('[mutable]');
-        }
+    init(options = {
+        mutableName: ''
+    }){
+        let $mutablesNodes;
         const internal = this;
         const mutables = this.mutables;
 
-        mutablesNodes.map(function () {
-            const $this = $(this);
-            const mutableName = $this.attr('mutable');
-            const mutableType = $this.attr('mutable-type') || 'string';
-            let mutableListen = $this.attr('mutable-listen') || '';
-            let mutableValue;
+        if(options && options.mutableName) {
+            $mutablesNodes = $(`[mutable="${options.mutableName}"]`);
+        } else {
+            $mutablesNodes = $('[mutable]');
+        }
 
-            switch (mutableType) {
-                case 'string': {
-                    mutableValue = $this.val() || $this.attr('value') || $this.html() || '';
-                    break;
+        $mutablesNodes.map(function () {
+            const node = this;
+
+            if(!node.mutableInit){
+                const $this = $(this);
+                const nodeUID = tools.genCode(20);
+                const mutableName = $this.attr('mutable');
+                const mutableType = $this.attr('mutable-type') || 'string';
+                let mutableListen = $this.attr('mutable-listen') || '';
+                let mutableValue;
+    
+                // Getting values from the DOM and setting some presets depending on what type of mutable is
+                mutableValue = init.getDataFromDOM(internal, $this, mutableName, mutableType);
+    
+                // Setting default listeners
+                mutableListen = init.treatListeners(node, mutableType, mutableListen);
+    
+                // Setting new mutable if it doesn't exist
+                if(!mutables[mutableName]){
+                    internal.set({
+                        name: mutableName,
+                        type: mutableType,
+                        value: mutableValue,
+                        listen: mutableListen,
+                        initialized: true,
+                    });
                 }
-                case 'number': {
-                    mutableValue = Number($this.val() || $this.attr('value') || $this.html());
-                    break;
-                }
-                case 'button': {
-                    mutableListen = 'click';
-                    break;
-                }
-                case 'html': {
-                    mutableValue = $this.html();
-                    break;
-                }
+    
+                let mutable = mutables[mutableName];
+    
+                // Adding the listeners
+                init.addListeners($this, internal, mutable);
+    
+                // Initializing dependencies
+                init.initDependencies($this, mutable);
+    
+                // Setting mutable-id to update the values later
+                $this.attr('mutable-id', mutable.ID);
+                $this.attr('mutable-uid', nodeUID);
+                
+                // Setting the mutable as initialized
+                mutable.initialized = true;
+                mutable.uidsRelated = [...mutable.uidsRelated, nodeUID];
+                node.mutableInit = true;
             }
-
-            if (!mutables[mutableName]) {
-                mutables[mutableName] = {
-                    ID: genCode(20),
-                    name: mutableName,
-                    type: mutableType,
-                    value: mutableValue
-                };
-            } else {
-                mutables[mutableName].value = bridges[mutableName] ? bridges[mutableName](mutableValue, internal) : mutableValue;
-                // mutables[mutableName].value = mutableValue;
-            }
-
-            mutableListen.split(',').map(function (listen) {
-                $this.on(listen, function (ev) {
-                    internal.update(mutableName, ev.target.value);
-                });
-            });
-
-            // Setting mutable-id to update the values later
-            $this.attr('mutable-id', mutables[mutableName].ID);
         });
 
-        
-        if(HTMLNode) {
-            return $htmlNode;
-        } else {
-            Object.keys(mutables).map(function (key) {
-                const type = mutables[key].type;
-
-                if(type !== 'button' && type !== 'html'){
-                    internal.update(key, mutables[key].value);
-                }
-            });
-        }
+        // Refreshing all mutables
+        this.refresh();
     }
 
-    get(name) {
-        return this.mutables[name].value;
+    refresh(){
+        const internal = this;
+        const mutables = this.mutables;
+
+        Object.keys(mutables).map((key)=>{
+            const type = mutables[key].type;
+
+            if(type !== 'button'){
+                internal.update(key, mutables[key].value);
+            }
+        });
+    }
+
+    scanUninitialized(mutations){
+        update.initUninitialized(this, mutations);
+    }
+
+    get(name){
+        if(!this.mutables[name]) errorLogs.getMutableNameDontExist(name);
+        return this.mutables[name];
+    }
+
+    set(setup = Mutable.prototype, bridge){
+        const newMutable = new Mutable(setup);
+        if(this.mutables[newMutable.name]) errorLogs.setMutableNameDuplicated(this, newMutable);
+
+        // Setting the new mutable value into mutable core and running the bridge
+        this.mutables[newMutable.name] = newMutable;
+        if(bridge) this.setBridge(newMutable.name, bridge);
+
+        return newMutable;
+    }
+
+    runBridge(mutableName, input){
+        if(!this.bridges[mutableName]) errorLogs.runBridgeNameDontExist(mutableName)
+
+        return this.bridges[mutableName](input, this);
+    }
+
+    setBridge(mutableName = '', bridge = ()=>{}){
+        if(!this.mutables[mutableName]) errorLogs.setBridgeMutableNameDontExist(mutableName);
+        
+        this.bridges[mutableName] = bridge;
     }
 
     update(name, newValue) {
-        if (!this.mutables[name]) throw new Error(`The mutable value ${name} isn't exist!`);
+        if (!this.mutables[name]) errorLogs.updateMutableNameDontExist(name, newValue)
+
         const internal = this;
         const mutable = this.mutables[name];
-        const $mutableNode = $(`[mutable-id='${mutable.ID}']`);
-        const dependencies = $mutableNode.attr('mutable-dependencies') || '';
 
-        switch (mutable.type) {
-            case 'string': {
-                mutable.value = this.bridges[name] ? this.bridges[name](newValue, internal) : String(newValue || mutable.value);
-                break;
-            }
-            case 'number': {
-                const inputNumber = Number(newValue || mutable.value)
-                const bridge = this.bridges[name];
-                mutable.value = bridge ? Number(bridge(inputNumber, internal)) : inputNumber;
-                break;
-            }
-            case 'button': {
-                this.bridges[name] && this.bridges[name](newValue || mutable.value, internal);
-                break;
-            }
-            case 'html': {
-                const initializedHTML = internal.init(newValue || mutable.value);
-                mutable.value = this.bridges[name] ? this.bridges[name](newValue, this) : initializedHTML;
-                // mutable.value = initializedHTML;
-                break;
-            }
-        }
+        // Updating the mutable object value
+        update.updateMutableValue(mutable, newValue, this);
 
-        if ($mutableNode.length) {
-            $mutableNode.map(function (index, node) {
-                const $node = $(this);
+        // Updating the DOM
+        update.updateDOM(mutable);
 
-                switch (node.nodeName) {
-                    case 'INPUT':
-                    case 'SELECT': {
-                        $node.val(mutable.value);
-                        break;
-                    }
-                    case 'BUTTON': {
-                        break;
-                    }
-                    default: {
-                        switch(mutable.type){
-                            case 'button': {
-                                break;
-                            }
-                            case 'html': {
-                                $node.html(mutable.value);
-                                break;
-                            }
-                            default: {
-                                $node.html(mutable.value);
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        dependencies.split(',').map(function (dependency) {
-            if (dependency) internal.update(dependency, internal.mutables[dependency] ? internal.mutables[dependency].value : '');
-        });
+        // Updating dependencies
+        update.runDependencies(internal, mutable);
     }
 }

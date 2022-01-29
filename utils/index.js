@@ -1,3 +1,7 @@
-import * as tools from './tools';
+import tools from './tools';
+import logs from './logs';
 
-export const utilTools = tools;
+export default {
+    tools,
+    logs
+}
