@@ -135,7 +135,7 @@ export default class MutableJS {
 
     set(setup = Mutable.prototype, bridge){
         const newMutable = new Mutable(setup);
-        if(this.mutables[newMutable.name]) errorLogs.setMutableNameDuplicated(internal, newMutable);
+        if(this.mutables[newMutable.name]) errorLogs.setMutableNameDuplicated(this, newMutable);
 
         // Setting the new mutable value into mutable core and running the bridge
         this.mutables[newMutable.name] = newMutable;
@@ -150,7 +150,7 @@ export default class MutableJS {
         return this.bridges[mutableName](input, this);
     }
 
-    setBridge(mutableName = '', bridge = (input, internal = MutableJS.prototype )=>{}){
+    setBridge(mutableName = '', bridge = ()=>{}){
         if(!this.mutables[mutableName]) errorLogs.setBridgeMutableNameDontExist(mutableName);
         
         this.bridges[mutableName] = bridge;
