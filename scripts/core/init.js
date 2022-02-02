@@ -75,7 +75,7 @@ function treatListeners(node, mutableType, mutableListen){
                     return blendListeners(splited, ['change']);
                 } 
                 default: {
-                    return splited;
+                    return blendListeners(splited);
                 }
             }
         }
@@ -83,7 +83,7 @@ function treatListeners(node, mutableType, mutableListen){
             return blendListeners(splited, ['click']);
         }
         default: {
-            return splited;
+            return blendListeners(splited);
         }
     }
 }
@@ -91,11 +91,11 @@ function treatListeners(node, mutableType, mutableListen){
 function blendListeners(splitedEvents, eventsToBlend){
     const parsed = {};
 
-    splitedEvents.map(item=>{
+    splitedEvents && splitedEvents.map(item=>{
         parsed[item] = new MutableListen({evName: item});
     });
 
-    eventsToBlend.map(item=>{
+    eventsToBlend && eventsToBlend.map(item=>{
         parsed[item] = new MutableListen({evName: item});
     });
 
@@ -104,25 +104,19 @@ function blendListeners(splitedEvents, eventsToBlend){
 
 function addListeners($this, internal, mutable){
     Object.keys(mutable.listen).map((current)=>{
-        const currentEvents = getJQueryEvents($this);
-        let mutableListenRef = mutable.listen[current].ref;
-        
-        if(!mutableListenRef){
-            $this.on(current, (ev)=>{
-                internal.update(mutable.name, ev.target.value);
-            });
-            const currentEv = currentEvents[current];
-            mutable.listen[current].ref = currentEv && currentEv[currentEv.length - 1];
-        } else {
-            const filtered = currentEvents[current] && currentEvents[current].find(ev=>ev.handler === mutableListenRef.handler);
+        $this.on(current, (ev)=>{
+            const $evThis = $(ev.target);
 
-            if(!filtered){
-                $this.on(current, (ev)=>{
-                    internal.update(mutable.name, ev.target.value);
-                });
-            }
-        }
-     
+            internal.update(
+                mutable.name, 
+                getDataFromDOM(
+                    internal, 
+                    $evThis, 
+                    mutable.name, 
+                    mutable.type
+                )
+            );
+        });
     });
 }
 
